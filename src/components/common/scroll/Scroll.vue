@@ -31,16 +31,18 @@ export default {
       click: true,
       pullUpLoad: this.pullUpLoad
     })
-    this.scroll.on('scroll', (position) => {
-      this.$emit('scroll', position)
-    })
-    this.scroll.on('pullingUp', () => {
+    if(this.probeType > 1) {
+      this.scroll.on('scroll', (position) => {
+        this.$emit('scroll', position)
+      })
+    }
+    this.pullUpLoad && this.scroll.on('pullingUp', () => {
       this.$emit('pullingUp')
     })
   },
   methods: {
-    finidshPullUp() {
-      this.scroll.finidshPullUp()
+    finishPullUp() {
+      this.scroll.finishPullUp()
     }
   }
 }
