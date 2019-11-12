@@ -3,11 +3,12 @@
     <nav-bar class="home-nav">
       <div slot="center">购物街</div>
     </nav-bar>
+    <tab-control v-show="isTabFixed" ref="tabControl1" :titles ="['流行','新款','精选']" class="tab-control" @tabClick="tabClick"/>
     <scroll class="wrapper" ref="scroll" @pullingUo="loadMore" @scroll="contentScroll" :probe-type="2" :pull-up-load="true">
-      <home-swiper :banner="banner"></home-swiper>
+      <home-swiper :banner="banner" @swiperImageLoad.once="swiperImageLoad"></home-swiper>
       <recommend-view :recommend="recommend"></recommend-view>
       <feature-view></feature-view>
-      <tab-control ref="tab-controll" :titles ="['流行','新款','精选']" class="tab-control" @tabClick="tabClick" />
+      <tab-control ref="tabControl2" :titles ="['流行','新款','精选']" class="tab-control" @tabClick="tabClick"/>
       <!-- <goods-list :goods="goods[currentType].list" /> -->
       <ul>
         <li>1</li>
@@ -138,8 +139,7 @@
   import GoodsList from "components/content/goods/GoodsList"
   import Scroll from "components/common/scroll/Scroll"
   import BackTop from "components/content/backTop/BackTop"
-  import debounce from "common/utils"
-import { log } from 'util'
+  import {debounce} from "common/utils"
   export default {
     name: "Home",
     components: {
@@ -162,7 +162,9 @@ import { log } from 'util'
           'sell': {'page':0, list: []}
         },
         currentType: 'pop',
-        isShowBackTop: false
+        isShowBackTop: false,
+        tabOffsetTop: 0,
+        isTabFixed: false
       }
     },
     created() {
@@ -176,8 +178,6 @@ import { log } from 'util'
       this.$bus.$on('itemImageLoad', () => {
         refresh()
       })
-      console.log(this.$refs.tab-controll.$el)
-      
     },
     methods: {
       getHomeMultidata() {
@@ -204,6 +204,8 @@ import { log } from 'util'
           case 2:
             this.currentType = 'sell'
         }
+        this.$refs.tabControl1.currentIndex = index
+        this.$refs.tabControl2.currentIndex = index
       },
       backClick() {
         this.$refs.scroll.scroll.scrollTo(0, 0, 500)
@@ -211,10 +213,14 @@ import { log } from 'util'
       },
       contentScroll(position) {
         this.isShowBackTop = -position.y > 500
-      },
+        this.isTabFixed = (-position.y) > this.tabOffsetTop
+      },  
       loadMore() {
         this.getHomeGoods(this.currentType)
         this.$refs.scroll.finishPullUp()
+      },
+      swiperImageLoad() {
+        this.tabOffsetTop = this.$refs.tabControl2.$el.offsetTop
       }
     }
   }
@@ -224,11 +230,6 @@ import { log } from 'util'
   .home-nav {
     background-color: var(--color-tint);
     color: #fff;
-    position: fixed;
-    left: 0;
-    right: 0;
-    top: 0;
-    z-index: 9;
   }
   #home {
     height: 100vh;
@@ -236,8 +237,7 @@ import { log } from 'util'
   }
   .tab-control {
     background-color: #fff;
-    position: sticky;
-    top: 44px;
+    position: relative;
     z-index: 9;
   }
   .wrapper {
